@@ -47,15 +47,37 @@ const notFoundHandler = (req, res) => {
   res.write(JSON.stringify({ message: "Not Found" }));
   res.end();
 };
+//adding new users via post req
+const createUserHandler = (req, res) => {
+  let body = "";
+
+  //listen for the data
+  req.on("data", (chunk) => {
+    body += chunk.toString();
+  });
+
+  req.on("end", () => {
+    const newUser = JSON.parse(body);
+    users.push(newUser);
+    res.statusCode = 201;
+    res.write(JSON.stringify(newUser));
+    res.end();
+  });
+};
 
 const server = createServer((req, res) => {
   try {
     logger(req, res, () => {
-      jsonMiddleware(req, res, () => {
+      jsonMiddleware(req, res, () => { //all files are in json format
         if (req.method === "GET" && req.url === "/api/users") {
           getUsersHandler(req, res);
-        } else if (req.url.match(/\/api\/users\/([0-9]+)/) && req.method === "GET") {
+        } else if (
+          req.url.match(/\/api\/users\/([0-9]+)/) &&
+          req.method === "GET"
+        ) {
           getUserByIdHandler(req, res);
+        } else if (req.url === "/api/users" && req.method === "POST") {
+          createUserHandler(req, res);
         } else {
           notFoundHandler(req, res);
         }
